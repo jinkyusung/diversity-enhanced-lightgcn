@@ -144,9 +144,9 @@ class AdjacencyMatrix:
                 print(f"costing {end-s}s, saved norm_mat...")
                 sp.save_npz(adj_mat_file, norm_adj)
 
-                graph = self._convert_sp_mat_to_sp_tensor(norm_adj)
-                graph = graph.coalesce().to(self.device)
-                print("don't split the matrix")
+            graph = self._convert_sp_mat_to_sp_tensor(norm_adj)
+            graph = graph.coalesce().to(self.device)
+            print("don't split the matrix")
         return graph
         
 
