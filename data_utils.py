@@ -2,7 +2,7 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset
 from torch.nn.utils.rnn import pad_sequence
-
+from numpy.typing import NDArray
 from scipy.sparse import csr_matrix
 from time import time
 import scipy.sparse as sp
@@ -152,7 +152,7 @@ class AdjacencyMatrix:
 
 """ Train Dataset for train_dataloader """
 class PairwiseTrainData(Dataset):
-    def __init__(self, train_user, train_item, n_user, m_item):
+    def __init__(self, train_user, train_item, n_user, m_item, do_neg_sampling=True):
         self.train_user = train_user
         self.train_item = train_item
 
@@ -160,9 +160,11 @@ class PairwiseTrainData(Dataset):
         self.m_item = m_item
 
         self.history = self._make_dict(keys=train_user, values=train_item)
-        self.train_neg_item = self._sample_negs()
+        self.do_neg_sampling = do_neg_sampling
+        if self.do_neg_sampling:
+            self.train_neg_item = self._sample_negs()
 
-    def _make_dict(self, keys: np.array, values: np.array) -> dict:
+    def _make_dict(self, keys: np.array, values: np.array) -> dict[int, NDArray]:
         sorted_indices = np.argsort(keys)
         sorted_keys = keys[sorted_indices]
         sorted_values = values[sorted_indices]
@@ -184,8 +186,11 @@ class PairwiseTrainData(Dataset):
     def __getitem__(self, idx):
         batch_user = self.train_user[idx]
         batch_pos_item = self.train_item[idx]
-        batch_neg_item = self.train_neg_item[idx]
-        return batch_user, batch_pos_item, batch_neg_item
+        if self.do_neg_sampling:
+            batch_neg_item = self.train_neg_item[idx]
+            return batch_user, batch_pos_item, batch_neg_item
+        else:
+            return batch_user, batch_pos_item
     
     def __len__(self):
         return self.train_user.size
@@ -199,7 +204,7 @@ class TestData(Dataset):
         self.history = self._make_dict(keys=train_user, values=train_item)
         self.label = self._make_dict(keys=test_user, values=test_item)
 
-    def _make_dict(self, keys: np.array, values: np.array) -> dict:
+    def _make_dict(self, keys: np.array, values: np.array) -> dict[int, NDArray[np.int_]]:
         sorted_indices = np.argsort(keys)
         sorted_keys = keys[sorted_indices]
         sorted_values = values[sorted_indices]
@@ -210,8 +215,8 @@ class TestData(Dataset):
 
     def __getitem__(self, idx):
         batch_user = self.unique_test_user[idx]
-        batch_history = self.history[batch_user] if batch_user in self.history else []
-        batch_label = self.label[batch_user] if batch_user in self.label else []
+        batch_history = self.history[batch_user] if batch_user in self.history else np.empty(0, dtype=np.int_)
+        batch_label = self.label[batch_user] if batch_user in self.label else np.empty(0, dtype=np.int_)
         return batch_user, batch_history, batch_label
 
     def __len__(self):
@@ -224,10 +229,9 @@ In this case, The number of Each user's history or label items are different.
 So, To use collate process of torch.dataloader, we should implement padding.
 
 """
-def collate_fn(batch):
+def collate_fn(batch) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
     users, histories, test_items = zip(*batch)
-
-    users = [torch.tensor(user) for user in users]
+    users = torch.tensor(users)
     histories = [torch.tensor(hist) for hist in histories]
     test_items = [torch.tensor(test) for test in test_items]
 
