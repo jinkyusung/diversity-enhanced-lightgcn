@@ -110,5 +110,10 @@ class LightGCN(Model):
             i.e. F(E_u[users] * E_i^T)
         """
         user_final_embedding, item_final_embedding = self._get_final_embedding()
-        user_final_embedding = user_final_embedding[users]
+        user_final_embedding = user_final_embedding[users, :]
         return self.f(torch.matmul(user_final_embedding, item_final_embedding.T))
+
+    def to(self, device):
+        # Override the to method to move self.graph as well
+        self.graph = self.graph.to(device)
+        return super(LightGCN, self).to(device)
