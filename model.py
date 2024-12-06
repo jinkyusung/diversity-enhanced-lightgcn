@@ -31,6 +31,9 @@ class LightGCN(Model):
 
         self.user_embedding = nn.Embedding(n_users, embedding_dim)
         self.item_embedding = nn.Embedding(n_items, embedding_dim)
+        
+        nn.init.xavier_uniform_(self.user_embedding.weight)
+        nn.init.xavier_uniform_(self.item_embedding.weight)
 
         self.f = nn.Sigmoid()
 
@@ -117,3 +120,4 @@ class LightGCN(Model):
         # Override the to method to move self.graph as well
         self.graph = self.graph.to(device)
         return super(LightGCN, self).to(device)
+        

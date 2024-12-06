@@ -1,0 +1,26 @@
+path:
+  log: ./result/log.txt
+  model: ./result/best_model
+  result: ./result/metric.tsv
+
+data:
+  train: ./yelp2018/train.txt
+  test: ./yelp2018/test.txt
+  adj_mat: ./yelp2018/s_pre_adj_mat.npz
+
+batch:
+  train: 2048
+  test: 1024
+
+model:
+  epochs: 1000
+  n_layers: 4
+  embed_dim: 64
+  neg_sampling: True
+  reg: 1.0e-4
+  lr: 1.0e-3
+
+loss: deweighted_directau
+
+topk: 20
+metrics: ['recall', 'ndcg', 'diversity']

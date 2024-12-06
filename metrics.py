@@ -1,5 +1,6 @@
 import torch
 
+
 def recall(pos_index: torch.Tensor, pos_len: torch.Tensor) -> torch.Tensor:
     """
     Calculate Recall@K
@@ -11,6 +12,7 @@ def recall(pos_index: torch.Tensor, pos_len: torch.Tensor) -> torch.Tensor:
     """
     assert pos_index.shape[0] == pos_len.shape[0]
     return torch.sum(pos_index, axis=1) / pos_len
+
 
 def ndcg(pos_index: torch.Tensor, pos_len: torch.Tensor) -> torch.Tensor:
     """
@@ -42,6 +44,7 @@ def ndcg(pos_index: torch.Tensor, pos_len: torch.Tensor) -> torch.Tensor:
 
     return dcg / idcg
 
+
 def diversity(topk_items: torch.Tensor, item_degree: torch.Tensor) -> torch.Tensor:
     """
     Calculate diversity of the recommendation defined as
@@ -56,10 +59,10 @@ def diversity(topk_items: torch.Tensor, item_degree: torch.Tensor) -> torch.Tens
     return:
         Diversity for each user in the batch
     """
-
     diversity = torch.mean(1 / torch.log1p(item_degree[topk_items]), axis=1)
 
     return diversity
+
 
 metrics_dict = {
     'recall': recall,
