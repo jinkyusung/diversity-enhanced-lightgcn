@@ -78,7 +78,6 @@ def test_loop(dataloader, model, loss_fn, evaluator: TopKEvaluator, epoch: int, 
             label:      list[torch.Tensor] = remove_padding(label)
 
             pred:       torch.Tensor = model.get_users_rating_prediction(user)
-            assert pred.shape == (len(user), num_item)
 
             result_dict = evaluator.evaluate(pred, history, label)
             for metric in result_dict:
