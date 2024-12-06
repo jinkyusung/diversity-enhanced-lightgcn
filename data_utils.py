@@ -182,6 +182,9 @@ class PairwiseTrainData(Dataset):
                     break
             train_neg_item.append(sampled_item)
         return np.array(train_neg_item)
+    
+    def sample_negs(self):
+        self.train_neg_item = self._sample_negs()
 
     def __getitem__(self, idx):
         batch_user = self.train_user[idx]

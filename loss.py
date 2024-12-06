@@ -14,6 +14,7 @@ class BPRLoss:
         user_final_embedding,
         pos_item_final_embedding,
         neg_item_final_embedding,
+        **kwargs,
     ):
         """
         params:
@@ -43,7 +44,7 @@ class BPRLoss:
                 + pos_item_embedding.norm(2).pow(2)
                 + neg_item_embedding.norm(2).pow(2)
             ) / batch_size
-            return bpr_loss + self.reg_strength * reg_loss
+            return bpr_loss + self.reg_strength / 2 * reg_loss
 
 
 class DirectAULoss:
