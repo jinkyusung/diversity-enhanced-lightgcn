@@ -1,14 +1,10 @@
-import os
-import sys
 import torch
 import numpy as np
-import pandas as pd
 from torch.utils.data import Dataset, DataLoader
 from scipy.sparse import csr_matrix
 from tqdm import tqdm
 import scipy.sparse as sp
 from time import time
-from pprint import pprint
 
 
 from logger import console
@@ -23,6 +19,14 @@ console(f"Your Device: {device_str}")
 from data_utils import Yelp2018
 from data_utils import AdjacencyMatrix
 from data_utils import PairwiseTrainData
+from model import LightGCN
+
+from evaluator import TopKEvaluator
+from data_utils import remove_padding
+
+from loss import loss_dict
+from data_utils import TestData, collate_fn
+from evaluator import TopKEvaluator
 
 
 yelp2018 = Yelp2018(c.train_file, c.test_file)
@@ -39,8 +43,8 @@ test_item = yelp2018.test_item
 test_interaction = yelp2018.test_interaction
 
 # Yelp2018 Statistics Check #
-print("Yelp2018")
-print(
+console("Yelp2018")
+console(
     f"""
 #user = {num_user}
 #item = {num_item}
@@ -83,10 +87,6 @@ train_item_degree = torch.tensor(np.bincount(train_item), dtype=torch.float32).t
 
 del train_test_user, train_test_item
 
-# Initialize model
-
-from model import LightGCN
-
 model = LightGCN(num_user, num_item, c.n_layers, c.embed_dim, graph)
 model.to(device)
 
@@ -118,12 +118,12 @@ def train_loop(train_dataloader, model, loss_fn, optimizer: torch.optim.Optimize
         optimizer.step()
 
         if batch_num % 100 == 0:
-            print(
+            console(
                 f"loss: {loss.item():>7f} [{c.train_batch_size * batch_num + len(minibatch[0]):>5d}/{size:>5d}]"
             )
 
     avg_loss = loss_sum / num_batches
-    print(f"Train Avg loss: {avg_loss:>7f}")
+    console(f"Train Avg loss: {avg_loss:>7f}")
 
 
 # A dictionary to store the best metric values along epochs
@@ -131,10 +131,6 @@ best_metric = dict()
 
 # Boolean indicating whether to write the header in the metric file
 write_header = True
-
-
-from evaluator import TopKEvaluator
-from data_utils import remove_padding
 
 
 def test_loop(dataloader, model, loss_fn, evaluator: TopKEvaluator, epoch: int):
@@ -187,36 +183,33 @@ def test_loop(dataloader, model, loss_fn, evaluator: TopKEvaluator, epoch: int):
             best_metric[metric] = 0
         if metrics_result_dict[metric] > best_metric[metric]:
             best_metric[metric] = metrics_result_dict[metric]
-            print(f"Best {metric} model updated. Saving the model.")
+            console(f"Best {metric} model updated. Saving the model.")
             torch.save(
                 model.state_dict(), f"{c.best_model_dir}/best_{metric}_model.pth"
             )
 
-    print(f"Eval results: ")
+    console(f"Eval results: ")
     for metric in metrics_result_dict:
-        print(f"{metric}: {metrics_result_dict[metric]:.4f}", end=" ")
-    print("\n")
+        console(f"{metric}: {metrics_result_dict[metric]:.4f}", end=" ")
+    console("\n")
 
 
-from loss import loss_dict
 
 loss_fn = loss_dict[c.loss_fn](item_degree=train_item_degree).loss_fn
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
-from data_utils import TestData, collate_fn
 
 test_dataset = TestData(train_user, train_item, test_user, test_item)
 test_dataloader = DataLoader(
     test_dataset, batch_size=c.test_batch_size, shuffle=False, collate_fn=collate_fn
 )
 
-from evaluator import TopKEvaluator
 
 evaluator = TopKEvaluator(
     c.topk, c.metrics, device=device, item_degree=train_test_item_degree
 )
 
 for epoch in range(1, c.epochs + 1):
-    print(f"Epoch {epoch}\n-------------------------------")
+    console(f"Epoch {epoch}\n-------------------------------")
     train_loop(train_dataloader, model, loss_fn, optimizer)
     test_loop(test_dataloader, model, loss_fn, evaluator, epoch)
