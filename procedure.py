@@ -16,6 +16,9 @@ with open("config.yml", "r") as file:
     data = yaml.safe_load(file)
     c = Config(data)
 
+best_metric: dict = {}
+write_header: bool = True
+
 
 # File output function for logging #
 def console(arg) -> None:

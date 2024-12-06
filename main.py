@@ -91,9 +91,6 @@ loss_fn = loss_dict[c.loss](item_degree=train_item_degree).loss_fn
 optimizer = torch.optim.Adam(model.parameters(), lr=c.model.lr)
 evaluator = TopKEvaluator(c.topk, c.metrics, device=device, item_degree=train_test_item_degree)
 
-best_metric: dict = {}
-write_header: bool = True
-
 for epoch in range(1, c.model.epochs + 1):
     console(f"Epoch {epoch}\n-------------------------------")
     train_loop(train_dataloader, model, loss_fn, optimizer, device)
