@@ -1,6 +1,7 @@
 import torch
 import yaml
 from evaluator import TopKEvaluator
+from data_utils import remove_padding
 
 
 # Variables for config #
