@@ -15,7 +15,7 @@ if load_model:
 
 # Hyperparams #
 start_epoch = 1  # should be 1 typically, and not 1 if you want to continue training
-epochs = 1000  # meaning the end epoch, so `epochs - start_epoch + 1` is the number of epochs to train
+epochs = 700  # meaning the end epoch, so `epochs - start_epoch + 1` is the number of epochs to train
 n_layers = 3
 embed_dim = 64
 train_batch_size = 2048
@@ -29,6 +29,7 @@ loss_fn = "bpr"
 # Eval #
 topk = 20
 metrics = ["recall", "ndcg", "diversity"]
+eval_every_n_epochs = 10
 
 # Random Seed #
 seed = 2024
