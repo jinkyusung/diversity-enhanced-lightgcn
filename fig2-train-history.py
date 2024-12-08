@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 
 def twin_plot(df, title, out):
-    fig, ax1 = plt.subplots(figsize=(7, 6), dpi=1000)
+    fig, ax1 = plt.subplots(figsize=(6, 5), dpi=1000)
 
     ax1.plot(df['epoch'], df['diversity'], label='diversity', color='orangered')
 
@@ -21,8 +21,10 @@ def twin_plot(df, title, out):
 
     ax1.legend(handles + handles2, labels + labels2, loc='lower right')
 
+
     plt.title(title)
 
+    fig.tight_layout()
     plt.grid(False)
     plt.savefig(out)
     plt.close()
