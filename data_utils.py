@@ -161,19 +161,16 @@ class PairwiseTrainData(Dataset):
 
         self.history = self._make_dict(keys=train_user, values=train_item)
         self.do_neg_sampling = do_neg_sampling
-        if self.do_neg_sampling:
-            self.train_neg_item = self._sample_negs()
 
     def _make_dict(self, keys: np.array, values: np.array) -> dict[int, NDArray]:
-        sorted_indices = np.argsort(keys)
-        sorted_keys = keys[sorted_indices]
-        sorted_values = values[sorted_indices]
-        unique_keys, start_indices = np.unique(sorted_keys, return_index=True)
-        split_values = np.split(sorted_values, start_indices[1:])
-        obj = dict(zip(unique_keys, split_values))
-        return obj
+        result = {}
+        for key, value in zip(keys, values):
+            if key not in result:
+                result[key] = []
+            result[key].append(value)
+        return result
 
-    def _sample_negs(self):
+    def sample_negs(self):
         train_neg_item = []
         for user in self.train_user:
             while True:
@@ -181,7 +178,7 @@ class PairwiseTrainData(Dataset):
                 if sampled_item not in self.history[user]:
                     break
             train_neg_item.append(sampled_item)
-        return np.array(train_neg_item)
+        self.train_neg_item = np.array(train_neg_item)
 
     def __getitem__(self, idx):
         batch_user = self.train_user[idx]
@@ -205,13 +202,12 @@ class TestData(Dataset):
         self.label = self._make_dict(keys=test_user, values=test_item)
 
     def _make_dict(self, keys: np.array, values: np.array) -> dict[int, NDArray[np.int_]]:
-        sorted_indices = np.argsort(keys)
-        sorted_keys = keys[sorted_indices]
-        sorted_values = values[sorted_indices]
-        unique_keys, start_indices = np.unique(sorted_keys, return_index=True)
-        split_values = np.split(sorted_values, start_indices[1:])
-        obj = dict(zip(unique_keys, split_values))
-        return obj
+        result = {}
+        for key, value in zip(keys, values):
+            if key not in result:
+                result[key] = []
+            result[key].append(value)
+        return result
 
     def __getitem__(self, idx):
         batch_user = self.unique_test_user[idx]

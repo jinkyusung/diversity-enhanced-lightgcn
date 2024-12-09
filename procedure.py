@@ -16,9 +16,6 @@ with open("config.yml", "r") as file:
     data = yaml.safe_load(file)
     c = Config(data)
 
-best_metric: dict = {}
-write_header: bool = True
-
 
 # File output function for logging #
 def console(arg) -> None:
@@ -26,6 +23,9 @@ def console(arg) -> None:
     with open(c.path.log, 'a') as fp:
         fp.write(msg)
     return
+
+best_metric: dict = {}
+write_header: bool = True
 
 
 # Procedure #
@@ -36,6 +36,10 @@ def train_loop(train_dataloader, model, loss_fn, optimizer: torch.optim.Optimize
 
     size = len(train_dataloader.dataset)
     num_batches = len(train_dataloader)
+
+    # New Negative Sampling for each epoch.
+    if c.model.neg_sampling:
+        train_dataloader.dataset.sample_negs()  
 
     for batch_num, minibatch in enumerate(train_dataloader):
         optimizer.zero_grad()
@@ -50,7 +54,9 @@ def train_loop(train_dataloader, model, loss_fn, optimizer: torch.optim.Optimize
         else:
             result = model(user, pos_item)
 
-        loss = loss_fn(**result, pos_item=pos_item)
+        bpr_loss, reg_loss = loss_fn(**result, pos_item=pos_item)
+
+        loss = bpr_loss + reg_loss
         
         loss_sum += loss.item()
         loss.backward()
@@ -58,7 +64,7 @@ def train_loop(train_dataloader, model, loss_fn, optimizer: torch.optim.Optimize
 
         if batch_num % 100 == 0:
             console(
-                f"loss: {loss.item():>7f} [{c.batch.train * batch_num + len(minibatch[0]):>5d}/{size:>5d}]"
+                f"loss: {bpr_loss.item():>7f} {reg_loss.item():>7f} [{c.batch.train * batch_num + len(minibatch[0]):>5d}/{size:>5d}]"
             )
 
 

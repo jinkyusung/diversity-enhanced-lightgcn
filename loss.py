@@ -3,7 +3,7 @@ import torch.nn.functional as F
 
 
 class BPRLoss:
-    def __init__(self, reg_strength=1e-5, **kwargs):
+    def __init__(self, reg_strength=1e-4, **kwargs):
         self.reg_strength = reg_strength
         
     def loss_fn(
@@ -46,7 +46,7 @@ class BPRLoss:
             ) / batch_size
 
             reg_loss *= self.reg_strength * 0.5
-            return bpr_loss + reg_loss
+            return bpr_loss, reg_loss
 
 
 class DirectAULoss:

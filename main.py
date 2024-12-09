@@ -14,6 +14,18 @@ from loss import loss_dict
 from procedure import c, console, train_loop, test_loop
 from evaluator import TopKEvaluator
 
+import random
+
+
+seed = c.rand_seed
+random.seed(seed)
+np.random.seed(seed)
+torch.manual_seed(seed)
+torch.cuda.manual_seed(seed)
+torch.cuda.manual_seed_all(seed)
+torch.backends.cudnn.benchmark = False
+torch.backends.cudnn.deterministic = True
+
 
 # Make directionary for model train, eval results #
 try:
@@ -67,8 +79,8 @@ graph = adjacency_matrix.get_sparse_graph(c.data.adj_mat)  # This is The Normali
 
 
 # Make `torch` dataloader #
-train_dataset = PairwiseTrainData( train_user, train_item, num_user, num_item, do_neg_sampling=c.model.neg_sampling )
-train_dataloader = DataLoader( train_dataset, batch_size=c.batch.train, shuffle=True, num_workers=0 )
+train_dataset = PairwiseTrainData(train_user, train_item, num_user, num_item, do_neg_sampling=c.model.neg_sampling)
+train_dataloader = DataLoader(train_dataset, batch_size=c.batch.train, shuffle=True, num_workers=0)
 test_dataset = TestData(train_user, train_item, test_user, test_item)
 test_dataloader = DataLoader(test_dataset, batch_size=c.batch.test, shuffle=False, collate_fn=collate_fn)
 
@@ -91,8 +103,9 @@ loss_fn = loss_dict[c.loss](item_degree=train_item_degree).loss_fn
 optimizer = torch.optim.Adam(model.parameters(), lr=c.model.lr)
 evaluator = TopKEvaluator(c.topk, c.metrics, device=device, item_degree=train_test_item_degree)
 
-for epoch in range(1, c.model.epochs + 1):
+for epoch in range(c.model.epochs):
     console(f"Epoch {epoch}\n-------------------------------")
     train_loop(train_dataloader, model, loss_fn, optimizer, device)
-    test_loop(test_dataloader, model, loss_fn, evaluator, epoch, device)
+    if epoch % 5 == 0:
+        test_loop(test_dataloader, model, loss_fn, evaluator, epoch, device)
     

@@ -1,7 +1,7 @@
 path:
-  log: ./result/log.txt
-  model: ./result/best_model
-  result: ./result/metric.tsv
+  log: ./bpr/log.txt
+  model: ./bpr/best_model
+  result: ./bpr/metric.tsv
 
 data:
   train: ./yelp2018/train.txt
@@ -16,11 +16,11 @@ model:
   epochs: 1000
   n_layers: 4
   embed_dim: 64
-  neg_sampling: True
   reg: 1.0e-4
   lr: 1.0e-3
 
-loss: deweighted_directau
+loss: bpr
 
 topk: 20
 metrics: ['recall', 'ndcg', 'diversity']
+rand_seed: 2024
